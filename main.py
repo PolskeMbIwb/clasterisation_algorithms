@@ -27,9 +27,11 @@ def _set_cluster_dots(data_r, k, prev_centers):
     return clusters
 
 
-def _setup_conditions(k):
-    shutil.rmtree('./c_means')
-    os.mkdir('./c_means')
+def _setup_conditions(k, alg_type):
+    output_dir = './' + alg_type + '_means'
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir)
+    os.mkdir(output_dir)
     new_centers, prev_centers = _centers_setup(k)
     iteration = 0
     return iteration, new_centers, prev_centers
@@ -64,7 +66,7 @@ def do_k_means(data_r: np.array, k, max_iter):
     :param max_iter: Максимальное число итераций
     :return: Номер последней итерации и вычисленные координаты центров
     """
-    iteration, new_centers, prev_centers = _setup_conditions(k)
+    iteration, new_centers, prev_centers = _setup_conditions(k, 'k')
     ax1 = plt.subplot(222) if DIM != 3 else fig.add_subplot(projection='3d')
     clusters = []
     while np.all(prev_centers != new_centers) and iteration < max_iter:  # основной цикл алгоритма
@@ -102,7 +104,7 @@ def do_fuzzy_c(data_r, k, max_iter, epsilon=0.01, m=2):
     :param m: Коэффициент точности подсчета границ кластеров / коэффициент неопределённости
     :return: Номер последней итерации и вычисленные координаты центров
     """
-    iteration, settled_centers, prev_centers = _setup_conditions(k)
+    iteration, settled_centers, prev_centers = _setup_conditions(k, 'c')
     ax1 = plt.subplot(222) if DIM != 3 else fig.add_subplot(projection='3d')
     membershipMatrix = np.array([[_membership_value(point, settled_centers, i, m) for i in range(CENTERS_NUM)]
                                  for point in data_r])
@@ -132,10 +134,6 @@ def draw_FCM(ax1, data_r, mus):
             ax1.scatter(x=data_r[i][0], y=data_r[i][1], color=colors[i], s=20)
         else:
             ax1.scatter(data_r[i][0], data_r[i][1], data_r[i][2], color=colors[i], s=20)
-    ax1.set_xlabel('x')
-    ax1.set_ylabel('y')
-    if DIM == 3:
-        ax1.set_zlabel('z')
     plt.savefig(r'./c_means/c_plot.png')
 
 
@@ -156,13 +154,13 @@ def _update_centroids(mus, dots, m):
     return new_centers
 
 
-DIM = 2
-TYPE = "C"
-LENGTH = 100
+DIM = 2  # draw methods can be used only with two- or three-dimensional datasets
+TYPE = "C"  # 'C' for Fuzzy-C-Means, 'K' for K-Means
+LENGTH = 100  # amount of data records
 CENTERS_NUM = 3
 MAX_ITERATIONS = 100
-HIGH_VALUE = 100
-np.random.seed(1)
+HIGH_VALUE = 100  # top-border of value for randomly generated data
+# np.random.seed(1)
 COLORS = [tuple(random.randint(0, 255) / 255 for _ in range(3)) for i in range(CENTERS_NUM)]
 DATA = np.random.rand(LENGTH, DIM) * HIGH_VALUE
 
